@@ -2,6 +2,8 @@ from calendar import c
 from threading import Thread
 from ldaptor.protocols import pureldap, pureber
 import socket
+
+from loguru import logger
 import ldapResponder
 
 
@@ -38,6 +40,7 @@ class LdapSocketFactory:
     def __init__(self, host, port, ldapConfig):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((host, port))
+            logger.info(f"Listening for connections on {host}:{port}!")
             s.listen()
             while True:
                 conn, addr = s.accept()
@@ -61,8 +64,9 @@ class LdapSocket(Thread):
     def send_answer(self, messageId: int, packetData:pureldap.LDAPProtocolOp):
         self.socket.sendall(pureldap.LDAPMessage(packetData, id=messageId).toWire())
 
-    def handle_packet(self, buffer):
+    async def handle_packet(self, buffer):
         resObject = pureber.berDecodeObject(berdecoder, buffer)[0]
+        logger.debug(f"Handling a packet with the contents: {resObject}")
 
         if resObject is None:
             raise Exception("Packet is not parsable:" +str(buffer))
@@ -86,7 +90,7 @@ class LdapSocket(Thread):
                 username = list(filter(lambda X: "uid" in X, resObject.value.dn.decode("utf-8").split(",")))[0][4:]
                 password = resObject.value.auth.decode("utf-8") 
                 
-                if self.config.validator.validate(username, password):
+                if await self.config.validator.validate(username, password):
                     self.send_answer(ldapResponder.successful_empty_bind_response())
                 else:
                     self.send_answer(ldapResponder.invalid_credentials_bind_response())

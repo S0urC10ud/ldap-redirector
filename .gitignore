@@ -1,2 +1,3 @@
 /__pycache__/
 /ldap_redirector/venv/
+/ldap_redirector/__pycache__/
