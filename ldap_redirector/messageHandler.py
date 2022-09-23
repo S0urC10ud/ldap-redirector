@@ -4,7 +4,8 @@ from ldaptor.protocols import pureldap, pureber
 import socket
 
 from loguru import logger
-import ldapResponder
+import loguru
+import ldap_redirector.ldapResponder
 
 
 berdecoder = pureldap.LDAPBERDecoderContext_TopLevel(
@@ -43,10 +44,14 @@ class LdapSocketFactory:
             logger.info(f"Listening for connections on {host}:{port}!")
             s.listen()
             while True:
-                conn, addr = s.accept()
-                with conn:
-                    print('Connected by', addr)
-                    LdapSocket(conn, ldapConfig).start()
+                try:
+                    conn, addr = s.accept()
+                    with conn:
+                        print('Connected by', addr)
+                        LdapSocket(conn, ldapConfig).start()
+                except KeyboardInterrupt:
+                    logger.info("Stopping because of a keyboard interrupt")
+                    break
                     
 
 class LdapSocket(Thread):

@@ -5,8 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import time
-import asyncio
-from standard_auth_backend import StandardAuthBackend
+from .standard_auth_backend import StandardAuthBackend
 from loguru import logger
 
 
@@ -16,10 +15,10 @@ login_button_xpath = '//*[@id="loginForm"]/div/div[3]/button'
 error_field_xpath = '//*[@id="slfErrorAlert"]'
 
 class InstagramBackend(StandardAuthBackend):
-    def __init__(self, config) -> None:
+    def __init__(self, chrome_binary_path, chrome_version) -> None:
         super().__init__()
-        self.chrome_location = config["chrome_binary_path"]
-        self.chrome_version = config["chrome_version"]
+        self.chrome_location = chrome_binary_path
+        self.chrome_version = chrome_version
 
     async def validate_impl(self, username, password):
         webdriver_options = webdriver.ChromeOptions()
@@ -53,8 +52,3 @@ class InstagramBackend(StandardAuthBackend):
                 return True
             except:
                 return driver.current_url != "https://www.instagram.com/"
-
-
-igb = InstagramBackend({"chrome_binary_path": "C:\\Users\\marti\\AppData\\Local\\BraveSoftware\\Brave-Browser-Beta\\Application\\brave.exe",
- "chrome_version": "98.0.4758.80"})
-asyncio.run(igb.validate("asdf"*5, "asdfasdfasdf"))
